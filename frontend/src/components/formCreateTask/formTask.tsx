@@ -8,7 +8,7 @@ import {
   Select,
   Textarea,
 } from "./styled.ts";
-
+import { createTask } from "../../lib/api.ts";
 import { useGetAllTasks } from "../../lib/hooks.ts";
 
 const TaskForm: React.FC = () => {
@@ -21,9 +21,9 @@ const TaskForm: React.FC = () => {
     e.preventDefault();
     try {
       if(!title) alert('Title required')
-
+      await createTask({ title, description, status });
       await refreshTasks();
-      alert("Task creation is temporarily disabled. Please try again later.");
+      alert("Task successfull created");
       setTitle("");
       setDescription("");
     } catch (error) {

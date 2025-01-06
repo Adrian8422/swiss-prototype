@@ -96,4 +96,23 @@ export async function deleteTask(id: string) {
     };
   }
 }
+export async function createTask(data: any) {
+  const { title, description, status } = data;
 
+  try {
+    const response = await fetchAPI("/tasks", {
+      method: "POST",
+      body: {
+        title,
+        description,
+        status,
+      },
+    });
+    return response;
+  } catch (error: any) {
+    throw {
+      message: "Hubo un error",
+      status: error.status,
+    };
+  }
+}
