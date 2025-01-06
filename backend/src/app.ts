@@ -10,6 +10,8 @@ import {
   getTaskById,
 } from "./controllers/tasks";
 import cors from "cors";
+import { loginSchema, registerSchema } from "./validators/authSchema";
+import { taskSchema } from "./validators/taskSchema";
 
 const app = express();
 
@@ -23,24 +25,20 @@ app.post(
   "/auth/register",
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const { name, email, password } = req.body;
+      await registerSchema.validate(req.body, { abortEarly: false });
 
-      if (!name || !email || !password) {
-        res.status(400).json({
-          status: "error",
-          message: "Name, email, and password are required",
-        });
-      }
+      const { name, email, password } = req.body;
 
       const response = await registerUser({ name, email, password });
       res.status(201).send(response);
     } catch (error: any) {
       console.error("Error in /auth/register:", error.message);
 
-      if (error.message.includes("Validation error")) {
+      if (error.name === "ValidationError") {
+        const errorDetails = error.errors?.join(", ");
         res.status(400).json({
           status: "error",
-          message: error.message,
+          message: `Validation error: ${errorDetails}`,
         });
       } else if (error.name === "SequelizeUniqueConstraintError") {
         const details = error.errors?.map((err: any) => ({
@@ -67,14 +65,9 @@ app.post(
 
 app.post("/auth/login", async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password } = req.body;
+    await loginSchema.validate(req.body, { abortEarly: false });
 
-    if (!email || !password) {
-      res.status(400).json({
-        status: "error",
-        message: "Email and password are required",
-      });
-    }
+    const { email, password } = req.body;
 
     const response = await loginUser({ email, password });
 
@@ -82,7 +75,13 @@ app.post("/auth/login", async (req: Request, res: Response): Promise<void> => {
   } catch (error: any) {
     console.error("Error in /auth/login:", error.message);
 
-    if (error.message.includes("User not found")) {
+    if (error.name === "ValidationError") {
+      const errorDetails = error.errors?.join(", ");
+      res.status(400).json({
+        status: "error",
+        message: `Validation error: ${errorDetails}`,
+      });
+    } else if (error.message.includes("User not found")) {
       res.status(404).json({
         status: "error",
         message: "User not found",
@@ -91,11 +90,6 @@ app.post("/auth/login", async (req: Request, res: Response): Promise<void> => {
       res.status(401).json({
         status: "error",
         message: "Password incorrect",
-      });
-    } else if (error.message.includes("Validation error")) {
-      res.status(400).json({
-        status: "error",
-        message: error.message,
       });
     } else {
       res.status(500).json({
@@ -130,22 +124,33 @@ app.get(
   }
 );
 
-app.post(
-  "/tasks",
-  middlewareAuth,
-  async (req: Request | any, res: Response) => {
-    const { id } = req.user;
-    try {
-      const { title, description, status } = req.body;
+app.post("/tasks", middlewareAuth, async (req: Request | any, res: Response) => {
+  const { id } = req.user;
+  try {
+    await taskSchema.validate(req.body, { abortEarly: false });
 
-      const response = await createTask(id, { title, description, status });
-      res.send(response);
-    } catch (error: any) {
-      if (error.message == "We need to receive the data to create task")
-        res.status(400).json({ message: error.message });
+    const { title, description, status } = req.body;
+
+    const response = await createTask(id, { title, description, status });
+    res.send(response);
+  } catch (error: any) {
+    if (error.name === "ValidationError") {
+      const errorDetails = error.errors?.join(", ");
+      res.status(400).json({
+        status: "error",
+        message: `Validation error: ${errorDetails}`,
+      });
+    } else if (error.message === "We need to receive the data to create task") {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(500).json({
+        status: "error",
+        message: "Internal server error",
+        details: error.message,
+      });
     }
   }
-);
+});
 
 app.patch(
   "/tasks/:id",

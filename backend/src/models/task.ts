@@ -6,7 +6,6 @@ export class Task extends Model {
   public title!: string;
   public description!: string;
   public status!: "pendiente" | "en progreso" | "completada";
-  public dueDate!: string;
   public userId!: string;
 
   public readonly createdAt!: Date;
@@ -32,10 +31,6 @@ Task.init(
       type: DataTypes.ENUM("pendiente", "en progreso", "completada"),
       allowNull: false,
       defaultValue: "pendiente",
-    },
-    dueDate: {
-      type: DataTypes.STRING,
-      allowNull: true,
     },
     userId: {
       type: DataTypes.STRING,
