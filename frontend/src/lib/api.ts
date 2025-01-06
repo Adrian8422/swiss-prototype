@@ -1,4 +1,5 @@
-const BASE_URL = "http://localhost:3001";
+// const BASE_URL = "http://localhost:3001";
+const BASE_URL = "https://swiss-prototype.onrender.com";
 
 export async function fetchAPI(input?: RequestInfo, options?: any | undefined) {
   const url = BASE_URL + input;

@@ -15,7 +15,9 @@ const app = express();
 
 app.use(express.json());
 
-app.use(cors());
+app.use(cors({
+  origin:["https://swiss-prototype-frontend.onrender.com"]
+}));
 
 app.post(
   "/auth/register",
