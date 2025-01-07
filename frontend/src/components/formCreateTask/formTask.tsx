@@ -20,10 +20,10 @@ const TaskForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if(!title) alert('Title required')
+      if(!title) alert('Title is required')
       await createTask({ title, description, status });
       await refreshTasks();
-      alert("Task successfull created");
+      alert("Task successfully created");
       setTitle("");
       setDescription("");
     } catch (error) {
