@@ -17,9 +17,14 @@ const app = express();
 
 app.use(express.json());
 
-app.use(cors({
-  origin:["https://swiss-prototype-frontend.onrender.com"]
-}));
+app.use(
+  cors({
+    origin: [
+      "https://swiss-prototype-frontend.onrender.com",
+      "http://localhost:3000",
+    ],
+  })
+);
 
 app.post(
   "/auth/register",
@@ -124,33 +129,39 @@ app.get(
   }
 );
 
-app.post("/tasks", middlewareAuth, async (req: Request | any, res: Response) => {
-  const { id } = req.user;
-  try {
-    await taskSchema.validate(req.body, { abortEarly: false });
+app.post(
+  "/tasks",
+  middlewareAuth,
+  async (req: Request | any, res: Response) => {
+    const { id } = req.user;
+    try {
+      await taskSchema.validate(req.body, { abortEarly: false });
 
-    const { title, description, status } = req.body;
+      const { title, description, status } = req.body;
 
-    const response = await createTask(id, { title, description, status });
-    res.send(response);
-  } catch (error: any) {
-    if (error.name === "ValidationError") {
-      const errorDetails = error.errors?.join(", ");
-      res.status(400).json({
-        status: "error",
-        message: `Validation error: ${errorDetails}`,
-      });
-    } else if (error.message === "We need to receive the data to create task") {
-      res.status(400).json({ message: error.message });
-    } else {
-      res.status(500).json({
-        status: "error",
-        message: "Internal server error",
-        details: error.message,
-      });
+      const response = await createTask(id, { title, description, status });
+      res.send(response);
+    } catch (error: any) {
+      if (error.name === "ValidationError") {
+        const errorDetails = error.errors?.join(", ");
+        res.status(400).json({
+          status: "error",
+          message: `Validation error: ${errorDetails}`,
+        });
+      } else if (
+        error.message === "We need to receive the data to create task"
+      ) {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(500).json({
+          status: "error",
+          message: "Internal server error",
+          details: error.message,
+        });
+      }
     }
   }
-});
+);
 
 app.patch(
   "/tasks/:id",
